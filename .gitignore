@@ -76,3 +76,6 @@ project/metals.sbt
 # Stuff I added
 .bsp
 .idea
+*.png
+*.jpeg
+*.jpg

@@ -1,20 +1,21 @@
-package com.yoo.app.controller
+package com.yoo.app.dao
 
 import com.yoo.app.model.{CollectionError, DeleteError}
-import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.{Completed, MongoCollection, MongoException}
 import org.mongodb.scala.bson.collection.immutable.Document
+import org.mongodb.scala.gridfs.GridFSUploadObservable
 import org.mongodb.scala.model.Filters.equal
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class DatabaseController(collection: MongoCollection[Document])(implicit ec: ExecutionContext) {
+class ImageDAO(collection: MongoCollection[Document])(implicit ec: ExecutionContext) {
 
   /** Gets the names of all images persisted on disk.
     * @return a sequence of strings which are image filenames.
     */
   def getImageNames(): Future[Seq[String]] =
     collection.find().toFuture().map { documents =>
-      documents.flatMap(_.values.map(value => value.asString.getValue))
+      documents.flatMap(_.get("_id").map(_.asString().getValue))
     }
 
   /**  Deletes the image with the given filename from the collection.
@@ -29,4 +30,10 @@ class DatabaseController(collection: MongoCollection[Document])(implicit ec: Exe
         Left(DeleteError(id))
       }
     }
+
+  def saveImage(id: String, author: String, size: Long, location: String): Future[Completed] = {
+    // TODO: handle case of duplicate insertion
+    val toSave = Document("_id" -> id, "author" -> author, "size" -> size, "location" -> location)
+    collection.insertOne(toSave).toFuture()
+  }
 }
