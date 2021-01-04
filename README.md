@@ -6,6 +6,7 @@ A very simple image repository service, written in Scala.
 
 * [Scala 2.13+](https://www.scala-lang.org/)
 * [sbt (Simple build tool](https://www.scala-sbt.org/)
+* [MongoDB Community Edition](https://www.mongodb.com/)
 
 ## Routes ##
 
@@ -23,7 +24,7 @@ A very simple image repository service, written in Scala.
 Sample response
 ```
 jyoo@lambda image-db % curl localhost:8080/images/metadata/meme.jpg
-> {
+{
   "name" : "meme.jpg",
   "author" : "yoo",
   "size" : 89607,
@@ -46,6 +47,12 @@ $ cd image-db
 $ sbt
 > jetty:start
 > browse
+```
+
+## Testing ##
+
+```sh
+$ sbt test
 ```
 
 If `browse` doesn't launch your browser, manually open [http://localhost:8080/](http://localhost:8080/) in your browser.
