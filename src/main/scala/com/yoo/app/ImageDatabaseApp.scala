@@ -49,7 +49,7 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     val author = params("author")
     new AsyncResult() {
       override val is: Future[_] = imageDao.getImageMetadataByAuthor(author).map {
-        case Left(error) => InternalServerError(s"${error.reason}")
+        case Left(error) => InternalServerError(error.reason)
         case Right(value) => Ok(value.map(_.asJson))
       }
     }
@@ -61,7 +61,7 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     val fileName = params("id")
     new AsyncResult() {
       override val is: Future[_] = imageDao.getImageMetadata(fileName).map {
-        case Left(error) => InternalServerError(s"${error.reason}")
+        case Left(error) => InternalServerError(error.reason)
         case Right(value) => Ok(value.asJson)
       }
     }
@@ -80,7 +80,7 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
       case Right(value) =>
         new AsyncResult() {
           override val is: Future[_] = imageDao.saveImage(id, author, size, value).map {
-            case Left(error) => InternalServerError(s"${error.reason}")
+            case Left(error) => InternalServerError(error.reason)
             case Right(value) => Ok(value)
           }
         }
@@ -96,10 +96,26 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
       case Right(_) =>
         new AsyncResult() {
           override val is: Future[_] = imageDao.deleteImage(toDelete).map {
-            case Left(error) => NotFound(s"${error.reason}")
+            case Left(error) => NotFound(error.reason)
             case Right(value) => Ok(value)
           }
         }
+    }
+  }
+
+  /** Bulk delete the images of the given author
+    */
+  delete("/images/:author") {
+    val authorToDelete = params.as[String]("author")
+    new AsyncResult() {
+      override val is: Future[_] = imageDao.deleteImagesByAuthor(authorToDelete).map {
+        case Left(error) => InternalServerError(error.reason)
+        case Right(value) =>
+          disk.bulkDeleteFromDisk(value) match {
+            case Left(error) => InternalServerError(error.reason)
+            case Right(result) => Ok(result)
+          }
+      }
     }
   }
 

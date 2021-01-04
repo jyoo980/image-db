@@ -59,6 +59,18 @@ class ImageDAO(collection: MongoCollection[Document])(implicit ec: ExecutionCont
       }
     }
 
+  /** Deletes the images associated with the given author from the collection.
+    * @param author the author whose images we want to delete.
+    * @return either a CollectionError on failure, or a sequence of images that have been deleted.
+    */
+  def deleteImagesByAuthor(author: String): Future[Either[CollectionError, Seq[String]]] =
+    for {
+      imagesByAuthor <- getImagesByAuthor(author)
+      deleteOps <- Future.sequence(imagesByAuthor.map(deleteImage))
+    } yield
+      if (deleteOps.forall(_.isRight)) Right(imagesByAuthor)
+      else Left(DeleteError(s"Error while deleting images by author: $author"))
+
   /** Persists image metadata to MongoDB after saving the image to disk.
     * @param id the filename of the image whose metadata we want to persist.
     * @param author the author of the image.

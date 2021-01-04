@@ -40,4 +40,15 @@ class DiskService {
     }
   }
 
+  def bulkDeleteFromDisk(ids: Seq[String]): Either[DiskError, String] = {
+    val paths = ids.map(id => s"./$id")
+    try {
+      paths.foreach(new File(_).delete())
+      Right(s"Successfully bulk deleted: $ids")
+    } catch {
+      case e: Exception =>
+        Left(DiskDeleteError(s"Failed to bulk delete: $ids from disk with error: ${e.getMessage}"))
+    }
+  }
+
 }
