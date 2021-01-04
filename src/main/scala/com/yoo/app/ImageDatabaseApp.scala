@@ -45,7 +45,7 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
 
   /** Return the metadata of an image, given its id.
     */
-  get("/images/:id") {
+  get("/images/metadata/:id") {
     val fileName = params("id")
     new AsyncResult() {
       override val is: Future[_] = imageDao.getImageMetadata(fileName).map {

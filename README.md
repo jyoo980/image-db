@@ -12,6 +12,25 @@ A very simple image repository service, written in Scala.
 `GET /`
 * Returns a list of all added images.
 
+`GET /images/:author`
+* Returns a list of all added images associated with the given author
+* Usage: `curl localhost:8080/:author`
+
+`GET /images/metadata/:id`
+* Returns the metadata of an image with the given id
+* Usage: `curl localhost:8080/images/metadata/:id`
+
+Sample response
+```
+jyoo@lambda image-db % curl localhost:8080/images/metadata/meme.jpg
+> {
+  "name" : "meme.jpg",
+  "author" : "yoo",
+  "size" : 89607,
+  "ext" : "jpeg"
+}
+```
+
 `POST /images/:author/:id`
 * Adds an image with the given author and id (usually filename) to the server.
 * Usage: `curl -F "image=@<path_to_image>" localhost:8080/images/:author/:id`
