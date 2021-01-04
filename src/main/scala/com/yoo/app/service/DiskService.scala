@@ -16,10 +16,11 @@ class DiskService {
     val pathOnDisk = s"./$id"
     val file = new File(pathOnDisk)
     val target = new BufferedOutputStream(new FileOutputStream(file))
-    try {
+    try if (lazyStream.nonEmpty) {
       lazyStream.foreach(target.write(_))
       Right(pathOnDisk)
-    } catch {
+    } else Left(WriteError(s"Failed to write: $id to disk."))
+    catch {
       case e: Exception =>
         Left(WriteError(s"Failed to write: $id to disk with error: ${e.getMessage}"))
     } finally target.close()
