@@ -4,6 +4,8 @@ sealed trait CollectionError {
   def reason: String
 }
 
-final case class DeleteError(toDelete: String) extends CollectionError {
-  override def reason: String = s"Error occurred while deleting: $toDelete"
-}
+final case class DeleteError(reason: String) extends CollectionError
+
+final case class DuplicateWriteError(reason: String) extends CollectionError
+
+final case class MongoWriteError(reason: String) extends CollectionError

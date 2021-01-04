@@ -1,5 +1,18 @@
 # image-db #
 
+## Routes ##
+
+`GET /`
+* Returns a list of all added images.
+
+`POST /images/:author/:id`
+* Adds an image with the given author and id (usually filename) to the server.
+* Usage: `curl -F "image=@<path_to_image>" localhost:8080/images/:author/:id`
+
+`DELETE /images/:id`
+* Deletes the image with the given id from the server.
+* Usage: `curl -X DELETE localhost:8080/images/:id`
+
 ## Build & Run ##
 
 ```sh

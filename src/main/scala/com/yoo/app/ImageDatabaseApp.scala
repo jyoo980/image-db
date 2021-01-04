@@ -1,6 +1,5 @@
 package com.yoo.app
 
-import java.io.{BufferedOutputStream, File, FileOutputStream}
 import java.util.concurrent.Executors
 
 import com.yoo.app.config.ImageDatabaseConfig
@@ -26,7 +25,7 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   private[this] val imageDao: ImageDAO = new ImageDAO(collection)(executor)
   private[this] val disk: DiskService = new DiskService
 
-  /** Return the names of all the image files we've persisted so far
+  /** Return the names of all the image files we've persisted so far.
     */
   get("/") {
     new AsyncResult() {
@@ -34,6 +33,8 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     }
   }
 
+  /** Upload an image to the service.
+    */
   post("/images/:author/:id") {
     val image = request.getPart("image")
     val id = params.as[String]("id")
@@ -43,16 +44,22 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     disk.writeToDisk(id, imageStream) match {
       case Left(error) => InternalServerError(error.reason)
       case Right(value) =>
-        // TODO: probably make this an Either and use a for-comp
-        imageDao.saveImage(id, author, size, value)
+        new AsyncResult() {
+          override val is: Future[_] = imageDao.saveImage(id, author, size, value).map {
+            case Left(error) => InternalServerError(s"${error.reason}")
+            case Right(value) => Ok(value)
+          }
+        }
     }
   }
 
+  /** Delete an image from the service.
+    */
   delete("/images/:id") {
     new AsyncResult() {
       val toDelete = params.as[String]("id")
       override val is: Future[_] = imageDao.deleteImage(toDelete).map {
-        case Left(value) => NotFound(s"${value.reason}")
+        case Left(error) => NotFound(s"${error.reason}")
         case Right(value) => Ok(value)
       }
     }
