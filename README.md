@@ -1,5 +1,12 @@
 # image-db #
 
+A very simple image repository service, written in Scala.
+
+## Requirements ##
+
+* [Scala 2.13+](https://www.scala-lang.org/)
+* [sbt (Simple build tool](https://www.scala-sbt.org/)
+
 ## Routes ##
 
 `GET /`
