@@ -1,4 +1,4 @@
-package com.yoo.app.model
+package com.yoo.app.model.error
 
 sealed trait DiskError {
   def reason: String

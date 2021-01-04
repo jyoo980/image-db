@@ -79,3 +79,4 @@ project/metals.sbt
 *.png
 *.jpeg
 *.jpg
+*.gif

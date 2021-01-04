@@ -1,4 +1,5 @@
 val ScalatraVersion = "2.7.1"
+val circeVersion = "0.12.3"
 
 ThisBuild / scalaVersion := "2.13.4"
 ThisBuild / organization := "com.yoo"
@@ -17,8 +18,11 @@ lazy val hello = (project in file("."))
       "org.mongodb.scala" %% "mongo-scala-bson" % "2.8.0",
       "org.mongodb" % "bson" % "3.12.0",
       "org.mongodb" % "mongodb-driver-core" % "3.12.0",
-      "org.mongodb" % "mongodb-driver-async" % "3.12.0"
-    ),
+      "org.mongodb" % "mongodb-driver-async" % "3.12.0",
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion
+    )
   )
 
 enablePlugins(SbtTwirl)

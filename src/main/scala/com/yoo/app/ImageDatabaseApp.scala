@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 import com.yoo.app.config.ImageDatabaseConfig
 import com.yoo.app.dao.ImageDAO
 import com.yoo.app.service.DiskService
+import io.circe.generic.auto._, io.circe.syntax._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.scalatra._
@@ -30,6 +31,27 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   get("/") {
     new AsyncResult() {
       override val is: Future[_] = imageDao.getImageNames().map(Ok(_))
+    }
+  }
+
+  /** Return the names of all the images that are associated with the given author.
+    */
+  get("/images/:author") {
+    val author = params("author")
+    new AsyncResult() {
+      override val is: Future[_] = imageDao.getImagesByAuthor(author).map(Ok(_))
+    }
+  }
+
+  /** Return the metadata of an image, given its id.
+    */
+  get("/images/:id") {
+    val fileName = params("id")
+    new AsyncResult() {
+      override val is: Future[_] = imageDao.getImageMetadata(fileName).map {
+        case Left(error) => InternalServerError(s"${error.reason}")
+        case Right(value) => Ok(value.asJson)
+      }
     }
   }
 

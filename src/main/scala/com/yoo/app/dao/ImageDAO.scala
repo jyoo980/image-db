@@ -1,20 +1,38 @@
 package com.yoo.app.dao
 
-import com.yoo.app.model.{CollectionError, DeleteError, DuplicateWriteError}
+import com.yoo.app.model.{DocumentTransformer, Metadata}
+import com.yoo.app.model.error.{CollectionError, DeleteError, DuplicateWriteError, LookupError}
 import org.mongodb.scala.{DuplicateKeyException, MongoCollection, MongoException}
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters.equal
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ImageDAO(collection: MongoCollection[Document])(implicit ec: ExecutionContext) {
+class ImageDAO(collection: MongoCollection[Document])(implicit ec: ExecutionContext)
+    extends DocumentTransformer {
 
   /** Gets the names of all images persisted on disk.
     * @return a sequence of strings which are image filenames.
     */
   def getImageNames(): Future[Seq[String]] =
-    collection.find().toFuture().map { documents =>
-      documents.flatMap(_.get("_id").map(_.asString().getValue))
+    collection.find().toFuture().map(_.flatMap(extractId))
+
+  /** Gets the names of all images that are associated with an author.
+    * @param author the author whose images we run a search for.
+    * @return the images that belong to the author.
+    */
+  def getImagesByAuthor(author: String): Future[Seq[String]] =
+    collection.find(equal("author", author)).toFuture().map(_.flatMap(extractId))
+
+  /** Return the metadata of the image with the given filename.
+    * @param id the filename of the image we want to obtain the metadata for.
+    * @return either a CollectionError or the image's metadata.
+    */
+  def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]] =
+    collection.find(equal("_id", id)).toFuture().map { documents =>
+      documents.headOption
+        .map(d => Right(extractMetadata(d)))
+        .getOrElse(Left(LookupError(s"Image: $id does not exist.")))
     }
 
   /**  Deletes the image with the given filename from the collection.

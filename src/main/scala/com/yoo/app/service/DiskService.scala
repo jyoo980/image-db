@@ -2,7 +2,7 @@ package com.yoo.app.service
 
 import java.io.{BufferedOutputStream, File, FileOutputStream, InputStream}
 
-import com.yoo.app.model.{DiskDeleteError, DiskError, WriteError}
+import com.yoo.app.model.error.{DiskDeleteError, DiskError, WriteError}
 
 class DiskService {
 
