@@ -18,15 +18,12 @@ final case class GIF() extends FileExtension {
 
 object FileExtension {
 
+  val supported = Map("png" -> PNG(), "jpeg" -> JPEG(), "jpg" -> JPEG(), "gif" -> GIF())
+
   def apply(fileName: String): Option[FileExtension] =
     if (fileName.contains(".")) {
       val lastDot = fileName.lastIndexOf(".")
-      Some(
-        fileName.substring(lastDot + 1, fileName.length) match {
-          case "png" => PNG()
-          case "jpeg" | "jpg" => JPEG()
-          case "gif" => GIF()
-        }
-      )
+      val ext = fileName.substring(lastDot + 1, fileName.length)
+      supported.get(ext)
     } else None
 }

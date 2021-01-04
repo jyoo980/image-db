@@ -2,11 +2,9 @@ package com.yoo.app
 
 import com.yoo.app.model.DocumentTransformer
 import org.mongodb.scala.Document
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
-class DocumentTransformerSpec extends AnyFlatSpec with Matchers with DocumentTransformerFixture {
+class DocumentTransformerSpec extends DefaultSpec with DocumentTransformerFixture {
 
   "extractId" should "evaluate to None given a document with no _id key" in {
     val doc = Document("id" -> "test")
