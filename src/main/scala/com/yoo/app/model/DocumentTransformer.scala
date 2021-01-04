@@ -16,11 +16,11 @@ trait DocumentTransformer {
     * @return the metadata of the given document.
     */
   def extractMetadata(document: Document): Metadata = {
-    val name = document.get("_id").map(_.asString.getValue).fold("")(id => id)
-    val extension = FileExtension(name).toString
+    val name = document.get("_id").map(_.asString.getValue).fold("n/a")(id => id)
+    val extension = FileExtension(name).fold("n/a")(fileExt => fileExt.toString)
     Metadata(
       name = name,
-      author = document.get("author").map(_.asString.getValue).fold("")(author => author),
+      author = document.get("author").map(_.asString.getValue).fold("n/a")(author => author),
       size = document.get("size").map(_.asInt64.getValue).fold(0L)(size => size),
       ext = extension
     )

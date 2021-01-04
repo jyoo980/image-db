@@ -21,7 +21,9 @@ lazy val hello = (project in file("."))
       "org.mongodb" % "mongodb-driver-async" % "3.12.0",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion
+      "io.circe" %% "circe-parser" % circeVersion,
+      "org.scalatest" %% "scalatest" % "3.2.2" % Test,
+      "org.mockito" %% "mockito-scala" % "1.14.8" % Test
     )
   )
 
