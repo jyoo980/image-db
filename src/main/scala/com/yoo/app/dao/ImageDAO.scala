@@ -5,7 +5,6 @@ import com.yoo.app.model.error.{CollectionError, DeleteError, DuplicateWriteErro
 import org.mongodb.scala.{DuplicateKeyException, MongoCollection, MongoException}
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters.equal
-
 import scala.concurrent.{ExecutionContext, Future}
 
 class ImageDAO(collection: MongoCollection[Document])(implicit ec: ExecutionContext)
@@ -34,6 +33,18 @@ class ImageDAO(collection: MongoCollection[Document])(implicit ec: ExecutionCont
         .map(d => Right(extractMetadata(d)))
         .getOrElse(Left(LookupError(s"Image: $id does not exist.")))
     }
+
+  /** Return the metadata of all images associated with the given author.
+    * @param author the author whose images we are fetching the metadata for.
+    * @return either a CollectionError or a sequence of metadata for the given author's images.
+    */
+  def getImageMetadataByAuthor(author: String): Future[Either[CollectionError, Seq[Metadata]]] =
+    for {
+      imagesByAuthor <- getImagesByAuthor(author)
+      metadata <- Future.sequence(imagesByAuthor.map(getImageMetadata))
+    } yield
+      if (metadata.forall(_.isRight)) Right(metadata.flatMap(_.toSeq))
+      else Left(LookupError(s"Error while looking up image metadata for author: $author"))
 
   /**  Deletes the image with the given filename from the collection.
     * @param id the filename of the image we want to delete.

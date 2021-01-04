@@ -43,6 +43,18 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     }
   }
 
+  /** Returns the metadata associated with the given author's images stored in the service.
+    */
+  get("/images/metadata/author/:author") {
+    val author = params("author")
+    new AsyncResult() {
+      override val is: Future[_] = imageDao.getImageMetadataByAuthor(author).map {
+        case Left(error) => InternalServerError(s"${error.reason}")
+        case Right(value) => Ok(value.map(_.asJson))
+      }
+    }
+  }
+
   /** Return the metadata of an image, given its id.
     */
   get("/images/metadata/:id") {
