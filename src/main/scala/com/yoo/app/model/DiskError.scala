@@ -5,3 +5,5 @@ sealed trait DiskError {
 }
 
 final case class WriteError(reason: String) extends DiskError
+
+final case class DiskDeleteError(reason: String) extends DiskError

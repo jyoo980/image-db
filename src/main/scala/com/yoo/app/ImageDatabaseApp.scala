@@ -56,12 +56,17 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   /** Delete an image from the service.
     */
   delete("/images/:id") {
-    new AsyncResult() {
-      val toDelete = params.as[String]("id")
-      override val is: Future[_] = imageDao.deleteImage(toDelete).map {
-        case Left(error) => NotFound(s"${error.reason}")
-        case Right(value) => Ok(value)
-      }
+    val toDelete = params.as[String]("id")
+    disk.deleteFromDisk(toDelete) match {
+      case Left(error) => InternalServerError(error.reason)
+      case Right(_) =>
+        new AsyncResult() {
+          override val is: Future[_] = imageDao.deleteImage(toDelete).map {
+            case Left(error) => NotFound(s"${error.reason}")
+            case Right(value) => Ok(value)
+          }
+        }
     }
   }
+
 }

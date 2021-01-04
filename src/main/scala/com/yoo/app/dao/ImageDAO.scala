@@ -53,4 +53,5 @@ class ImageDAO(collection: MongoCollection[Document])(implicit ec: ExecutionCont
           Left(DuplicateWriteError(s"Error while writing: $id, error: ${e.getMessage}"))
       }
   }
+
 }
