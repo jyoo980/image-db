@@ -29,42 +29,34 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   /** Return the names of all the image files we've persisted so far.
     */
   get("/") {
-    new AsyncResult() {
-      override val is: Future[_] = imageDao.getImageNames().map(Ok(_))
-    }
+    ServiceResponse(imageDao.getImageNames().map(Ok(_)))
   }
 
   /** Return the names of all the images that are associated with the given author.
     */
   get("/images/:author") {
     val author = params("author")
-    new AsyncResult() {
-      override val is: Future[_] = imageDao.getImagesByAuthor(author).map(Ok(_))
-    }
+    ServiceResponse(imageDao.getImagesByAuthor(author).map(Ok(_)))
   }
 
   /** Returns the metadata associated with the given author's images stored in the service.
     */
   get("/images/metadata/author/:author") {
     val author = params("author")
-    new AsyncResult() {
-      override val is: Future[_] = imageDao.getImageMetadataByAuthor(author).map {
-        case Left(error) => InternalServerError(error.reason)
-        case Right(value) => Ok(value.map(_.asJson).asJson)
-      }
-    }
+    ServiceResponse(imageDao.getImageMetadataByAuthor(author).map {
+      case Left(error) => InternalServerError(error.reason)
+      case Right(value) => Ok(value.map(_.asJson).asJson)
+    })
   }
 
   /** Return the metadata of an image, given its id.
     */
   get("/images/metadata/:id") {
     val fileName = params("id")
-    new AsyncResult() {
-      override val is: Future[_] = imageDao.getImageMetadata(fileName).map {
-        case Left(error) => InternalServerError(error.reason)
-        case Right(value) => Ok(value.asJson)
-      }
-    }
+    ServiceResponse(imageDao.getImageMetadata(fileName).map {
+      case Left(error) => InternalServerError(error.reason)
+      case Right(value) => Ok(value.asJson)
+    })
   }
 
   /** Upload an image to the service.
@@ -78,12 +70,10 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     disk.writeToDisk(id, imageStream) match {
       case Left(error) => InternalServerError(error.reason)
       case Right(value) =>
-        new AsyncResult() {
-          override val is: Future[_] = imageDao.saveImage(id, author, size, value).map {
-            case Left(error) => InternalServerError(error.reason)
-            case Right(value) => Ok(value)
-          }
-        }
+        ServiceResponse(imageDao.saveImage(id, author, size, value).map {
+          case Left(error) => InternalServerError(error.reason)
+          case Right(value) => Ok(value)
+        })
     }
   }
 
@@ -94,12 +84,10 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     disk.deleteFromDisk(toDelete) match {
       case Left(error) => InternalServerError(error.reason)
       case Right(_) =>
-        new AsyncResult() {
-          override val is: Future[_] = imageDao.deleteImage(toDelete).map {
-            case Left(error) => NotFound(error.reason)
-            case Right(value) => Ok(value)
-          }
-        }
+        ServiceResponse(imageDao.deleteImage(toDelete).map {
+          case Left(error) => NotFound(error.reason)
+          case Right(value) => Ok(value)
+        })
     }
   }
 
@@ -107,16 +95,13 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     */
   delete("/images/:author") {
     val authorToDelete = params.as[String]("author")
-    new AsyncResult() {
-      override val is: Future[_] = imageDao.deleteImagesByAuthor(authorToDelete).map {
-        case Left(error) => InternalServerError(error.reason)
-        case Right(value) =>
-          disk.bulkDeleteFromDisk(value) match {
-            case Left(error) => InternalServerError(error.reason)
-            case Right(result) => Ok(result)
-          }
-      }
-    }
+    ServiceResponse(imageDao.deleteImagesByAuthor(authorToDelete).map {
+      case Left(error) => InternalServerError(error.reason)
+      case Right(value) =>
+        disk.bulkDeleteFromDisk(value) match {
+          case Left(error) => InternalServerError(error.reason)
+          case Right(result) => Ok(result)
+        }
+    })
   }
-
 }
