@@ -50,7 +50,7 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     new AsyncResult() {
       override val is: Future[_] = imageDao.getImageMetadataByAuthor(author).map {
         case Left(error) => InternalServerError(error.reason)
-        case Right(value) => Ok(value.map(_.asJson))
+        case Right(value) => Ok(value.map(_.asJson).asJson)
       }
     }
   }

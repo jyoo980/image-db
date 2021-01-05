@@ -17,12 +17,41 @@ A very simple image repository service, written in Scala.
 * Returns a list of all added images associated with the given author
 * Usage: `curl localhost:8080/images/:author`
 
+`GET /images/metadata/author/:author`
+* Returns a list of metadata for the images associated with the given author
+* Usage: `curl localhost:8080/images/metadata/author/:author`
+
+Sample response
+```sh
+jyoo@lambda image-db % curl localhost:8080/images/metadata/author/yoo
+[
+  {
+    "name" : "some.gif",
+    "author" : "yoo",
+    "size" : 90945,
+    "ext" : "gif"
+  },
+  {
+    "name" : "tenet.jpg",
+    "author" : "yoo",
+    "size" : 156909,
+    "ext" : "jpeg"
+  },
+  {
+    "name" : "yoo.jpg",
+    "author" : "yoo",
+    "size" : 300322,
+    "ext" : "jpeg"
+  }
+]
+```
+
 `GET /images/metadata/:id`
 * Returns the metadata of an image with the given id
 * Usage: `curl localhost:8080/images/metadata/:id`
 
 Sample response
-```
+```sh
 jyoo@lambda image-db % curl localhost:8080/images/metadata/meme.jpg
 {
   "name" : "meme.jpg",
@@ -40,6 +69,10 @@ jyoo@lambda image-db % curl localhost:8080/images/metadata/meme.jpg
 * Deletes the image with the given id from the server.
 * Usage: `curl -X DELETE localhost:8080/images/:id`
 
+`DELETE /images/:author`
+* Deletes the images associated with the given author from the server.
+* Usage: `curl -X DELETE localhost:8080/images/:author`
+
 ## Build & Run ##
 
 ```sh
@@ -49,10 +82,11 @@ $ sbt
 > browse
 ```
 
+If `browse` doesn't launch your browser, manually open [http://localhost:8080/](http://localhost:8080/) in your browser.
+
 ## Testing ##
 
 ```sh
 $ sbt test
 ```
 
-If `browse` doesn't launch your browser, manually open [http://localhost:8080/](http://localhost:8080/) in your browser.
