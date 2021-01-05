@@ -5,13 +5,14 @@ import java.util.concurrent.Executors
 import com.yoo.app.config.ImageDatabaseConfig
 import com.yoo.app.dao.ImageDAO
 import com.yoo.app.service.DiskService
-import io.circe.generic.auto._, io.circe.syntax._
+import io.circe.generic.auto._
+import io.circe.syntax._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.scalatra._
 import org.scalatra.servlet.{FileUploadSupport, MultipartConfig}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class ImageDatabaseApp(collection: MongoCollection[Document])
     extends ScalatraServlet
