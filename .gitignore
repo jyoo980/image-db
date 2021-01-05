@@ -69,6 +69,7 @@ jrebel.lic
 .metals
 .bloop
 project/metals.sbt
+project/project
 
 # paulp script
 /.lib/
@@ -80,3 +81,4 @@ project/metals.sbt
 *.jpeg
 *.jpg
 *.gif
+.vscode

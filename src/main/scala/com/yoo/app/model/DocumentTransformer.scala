@@ -22,8 +22,8 @@ trait DocumentTransformer {
       name = name,
       author = document.get("author").map(_.asString.getValue).fold("n/a")(author => author),
       size = document.get("size").map(_.asInt64.getValue).fold(0L)(size => size),
-      ext = extension
+      ext = extension,
+      location = document.get("location").map(_.asString.getValue).fold("n/a")(loc => loc)
     )
   }
-
 }

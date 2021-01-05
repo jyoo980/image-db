@@ -3,7 +3,7 @@ package com.yoo.app
 import java.util.concurrent.Executors
 
 import com.yoo.app.config.ImageDatabaseConfig
-import com.yoo.app.dao.ImageDAO
+import com.yoo.app.dao.{DataStore, ImageDAO, MongoStore}
 import com.yoo.app.service.DiskService
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -24,13 +24,14 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   override protected implicit def executor: ExecutionContext =
     ExecutionContext.fromExecutor(Executors.newFixedThreadPool(100))
 
-  private[this] val imageDao: ImageDAO = new ImageDAO(collection)(executor)
+  private[this] val store: DataStore = new MongoStore(collection)(executor)
+  private[this] val imageDao: ImageDAO = new ImageDAO(store)(executor)
   private[this] val disk: DiskService = new DiskService
 
   /** Return the names of all the image files we've persisted so far.
     */
   get("/") {
-    ServiceResponse(imageDao.getImageNames().map(Ok(_)))
+    ServiceResponse(imageDao.getImageNames.map(Ok(_)))
   }
 
   /** Return the names of all the images that are associated with the given author.
