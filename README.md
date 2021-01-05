@@ -23,7 +23,7 @@ A very simple image repository service, written in Scala.
 
 Sample response
 ```sh
-jyoo@lambda image-db % curl localhost:8080/images/metadata/author/yoo
+$ curl localhost:8080/images/metadata/author/yoo
 [
   {
     "name" : "some.gif",
@@ -52,7 +52,7 @@ jyoo@lambda image-db % curl localhost:8080/images/metadata/author/yoo
 
 Sample response
 ```sh
-jyoo@lambda image-db % curl localhost:8080/images/metadata/meme.jpg
+$ curl localhost:8080/images/metadata/meme.jpg
 {
   "name" : "meme.jpg",
   "author" : "yoo",
