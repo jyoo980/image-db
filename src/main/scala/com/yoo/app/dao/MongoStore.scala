@@ -1,7 +1,7 @@
 package com.yoo.app.dao
 
 import com.yoo.app.model.{DocumentTransformer, Metadata}
-import com.yoo.app.model.error.{CollectionError, DeleteError, DuplicateWriteError, LookupError}
+import com.yoo.app.model.error._
 import org.mongodb.scala.{DuplicateKeyException, MongoCollection, MongoException}
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters.equal
@@ -23,14 +23,14 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
     * @return the images that belong to the author.
     */
   override def getImagesByAuthor(author: String): Future[Seq[String]] =
-    collection.find(equal("author", author)).toFuture().map(_.flatMap(extractId))
+    collection.find(equal(fieldName = "author", author)).toFuture().map(_.flatMap(extractId))
 
   /** Return the metadata of the image with the given filename.
     * @param id the filename of the image we want to obtain the metadata for.
     * @return either a CollectionError or the image's metadata.
     */
   override def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]] =
-    collection.find(equal("_id", id)).toFuture().map { documents =>
+    collection.find(equal(fieldName = "_id", id)).toFuture().map { documents =>
       documents.headOption
         .map(d => Right(extractMetadata(d)))
         .getOrElse(Left(LookupError(s"Image: $id does not exist")))
@@ -93,7 +93,7 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
         case _: DuplicateKeyException =>
           Left(DuplicateWriteError(s"Image: $id already exists."))
         case e: MongoException =>
-          Left(DuplicateWriteError(s"Error while writing: $id, error: ${e.getMessage}"))
+          Left(MongoWriteError(s"Error while writing: $id, error: ${e.getMessage}"))
       }
   }
 
