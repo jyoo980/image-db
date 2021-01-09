@@ -5,7 +5,7 @@ import com.yoo.app.model.error.CollectionError
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) extends {
+class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) {
 
   def getImageNames: Future[Seq[String]] = dataStore.getImageNames
 
