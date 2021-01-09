@@ -1,5 +1,7 @@
 package com.yoo.app
 
+import java.awt.Desktop
+import java.net.URI
 import java.util.concurrent.Executors
 
 import com.yoo.app.config.ImageDatabaseConfig
@@ -105,5 +107,12 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
           case Right(result) => Ok(result)
         }
     })
+  }
+
+  /** Navigate to a very fun url
+    */
+  get("/fun") {
+    val url = new URI(ImageDatabaseConfig.funAddr)
+    Desktop.getDesktop.browse(url)
   }
 }

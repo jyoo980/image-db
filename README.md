@@ -13,6 +13,9 @@ A very simple image repository service, written in Scala.
 `GET /`
 * Returns a list of all added images.
 
+`GET /fun`
+* Returns the splash page of this application (for fun)
+
 `GET /images/:author`
 * Returns a list of all added images associated with the given author
 * Usage: `curl localhost:8080/images/:author`
