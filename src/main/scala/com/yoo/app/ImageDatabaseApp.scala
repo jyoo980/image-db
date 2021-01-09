@@ -6,6 +6,7 @@ import java.util.concurrent.Executors
 
 import com.yoo.app.config.ImageDatabaseConfig
 import com.yoo.app.dao.{DataStore, ImageDAO, MongoStore}
+import com.yoo.app.model.ResponseEncoder
 import com.yoo.app.service.DiskService
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -19,7 +20,8 @@ import scala.concurrent.ExecutionContext
 class ImageDatabaseApp(collection: MongoCollection[Document])
     extends ScalatraServlet
     with FutureSupport
-    with FileUploadSupport {
+    with FileUploadSupport
+    with ResponseEncoder {
 
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(ImageDatabaseConfig.maxUploadSize)))
 
@@ -33,14 +35,16 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   /** Return the names of all the image files we've persisted so far.
     */
   get("/") {
-    ServiceResponse(imageDao.getImageNames.map(Ok(_)))
+    val result = imageDao.getImageNames.map(toResponseMap)
+    ServiceResponse(result.map(_.asJson).map(Ok(_)))
   }
 
   /** Return the names of all the images that are associated with the given author.
     */
   get("/images/:author") {
     val author = params("author")
-    ServiceResponse(imageDao.getImagesByAuthor(author).map(Ok(_)))
+    val result = imageDao.getImagesByAuthor(author).map(toResponseMap)
+    ServiceResponse(result.map(_.asJson).map(Ok(_)))
   }
 
   /** Returns the metadata associated with the given author's images stored in the service.
@@ -48,8 +52,10 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   get("/images/metadata/author/:author") {
     val author = params("author")
     ServiceResponse(imageDao.getImageMetadataByAuthor(author).map {
-      case Left(error) => InternalServerError(error.reason)
-      case Right(value) => Ok(value.map(_.asJson).asJson)
+      case Left(error) =>
+        InternalServerError(toError(error).asJson)
+      case Right(value) =>
+        Ok(toResponseMap(value).asJson)
     })
   }
 
@@ -58,8 +64,8 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   get("/images/metadata/:id") {
     val fileName = params("id")
     ServiceResponse(imageDao.getImageMetadata(fileName).map {
-      case Left(error) => InternalServerError(error.reason)
-      case Right(value) => Ok(value.asJson)
+      case Left(error) => InternalServerError(toError(error).asJson)
+      case Right(value) => Ok(toResponseMap(value).asJson)
     })
   }
 
@@ -72,25 +78,25 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
     val size = image.getSize
     val imageStream = image.getInputStream
     disk.writeToDisk(id, imageStream) match {
-      case Left(error) => InternalServerError(error.reason)
+      case Left(error) => InternalServerError(toError(error).asJson)
       case Right(value) =>
         ServiceResponse(imageDao.saveImage(id, author, size, value).map {
-          case Left(error) => InternalServerError(error.reason)
-          case Right(value) => Ok(value)
+          case Left(error) => InternalServerError(toError(error).asJson)
+          case Right(value) => Ok(toResponseMap(value).asJson)
         })
     }
   }
 
   /** Delete an image from the service.
     */
-  delete("/images/:id") {
+  delete("/images/:author/:id") {
     val toDelete = params.as[String]("id")
     disk.deleteFromDisk(toDelete) match {
-      case Left(error) => InternalServerError(error.reason)
+      case Left(error) => InternalServerError(toError(error).asJson)
       case Right(_) =>
         ServiceResponse(imageDao.deleteImage(toDelete).map {
-          case Left(error) => NotFound(error.reason)
-          case Right(value) => Ok(value)
+          case Left(error) => NotFound(toError(error).asJson)
+          case Right(value) => Ok(toResponseMap(value).asJson)
         })
     }
   }
@@ -100,11 +106,11 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
   delete("/images/:author") {
     val authorToDelete = params.as[String]("author")
     ServiceResponse(imageDao.deleteImagesByAuthor(authorToDelete).map {
-      case Left(error) => InternalServerError(error.reason)
+      case Left(error) => InternalServerError(toError(error).asJson)
       case Right(value) =>
         disk.bulkDeleteFromDisk(value) match {
-          case Left(error) => InternalServerError(error.reason)
-          case Right(result) => Ok(result)
+          case Left(error) => InternalServerError(toError(error).asJson)
+          case Right(result) => Ok(toResponseMap(result).asJson)
         }
     })
   }

@@ -27,26 +27,31 @@ A very simple image repository service, written in Scala.
 Sample response
 ```sh
 $ curl localhost:8080/images/metadata/author/yoo
-[
-  {
-    "name" : "some.gif",
-    "author" : "yoo",
-    "size" : 90945,
-    "ext" : "gif"
-  },
-  {
-    "name" : "tenet.jpg",
-    "author" : "yoo",
-    "size" : 156909,
-    "ext" : "jpeg"
-  },
-  {
-    "name" : "yoo.jpg",
-    "author" : "yoo",
-    "size" : 300322,
-    "ext" : "jpeg"
-  }
-]
+{
+  "results" : [
+    {
+      "name" : "tenet.jpg",
+      "author" : "yoo",
+      "size" : 156909,
+      "ext" : "jpeg",
+      "location" : "./tenet.jpg"
+    },
+    {
+      "name" : "meme.jpg",
+      "author" : "yoo",
+      "size" : 89607,
+      "ext" : "jpeg",
+      "location" : "./meme.jpg"
+    },
+    {
+      "name" : "mystery-image.gif",
+      "author" : "yoo",
+      "size" : 90945,
+      "ext" : "gif",
+      "location" : "./mystery-image.gif"
+    }
+  ]
+}
 ```
 
 `GET /images/metadata/:id`
@@ -57,10 +62,13 @@ Sample response
 ```sh
 $ curl localhost:8080/images/metadata/meme.jpg
 {
-  "name" : "meme.jpg",
-  "author" : "yoo",
-  "size" : 89607,
-  "ext" : "jpeg"
+  "results" : {
+    "name" : "tenet.jpg",
+    "author" : "yoo",
+    "size" : 156909,
+    "ext" : "jpeg",
+    "location" : "./tenet.jpg"
+  }
 }
 ```
 
@@ -68,9 +76,9 @@ $ curl localhost:8080/images/metadata/meme.jpg
 * Adds an image with the given author and id (usually filename) to the server.
 * Usage: `curl -F "image=@<path_to_image>" localhost:8080/images/:author/:id`
 
-`DELETE /images/:id`
-* Deletes the image with the given id from the server.
-* Usage: `curl -X DELETE localhost:8080/images/:id`
+`DELETE /images/:author/:id`
+* Deletes the image with the given author and id from the server.
+* Usage: `curl -X DELETE localhost:8080/images/:author/:id`
 
 `DELETE /images/:author`
 * Deletes the images associated with the given author from the server.

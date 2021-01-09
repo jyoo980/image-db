@@ -1,8 +1,6 @@
 package com.yoo.app.model.error
 
-sealed trait CollectionError {
-  def reason: String
-}
+sealed trait CollectionError extends ImageDatabaseError
 
 final case class DeleteError(reason: String) extends CollectionError
 
