@@ -2,22 +2,19 @@ package com.yoo.app
 
 import java.awt.Desktop
 import java.net.URI
-import java.util.concurrent.Executors
 
 import com.yoo.app.config.ImageDatabaseConfig
-import com.yoo.app.dao.{DataStore, ImageDAO, MongoStore}
+import com.yoo.app.dao.ImageDAO
 import com.yoo.app.model.ResponseEncoder
 import com.yoo.app.service.DiskService
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.bson.collection.immutable.Document
 import org.scalatra._
 import org.scalatra.servlet.{FileUploadSupport, MultipartConfig}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
-class ImageDatabaseApp(collection: MongoCollection[Document])
+class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: ExecutionContextExecutor)
     extends ScalatraServlet
     with FutureSupport
     with FileUploadSupport
@@ -25,12 +22,7 @@ class ImageDatabaseApp(collection: MongoCollection[Document])
 
   configureMultipartHandling(MultipartConfig(maxFileSize = Some(ImageDatabaseConfig.maxUploadSize)))
 
-  override protected implicit def executor: ExecutionContext =
-    ExecutionContext.fromExecutor(Executors.newFixedThreadPool(100))
-
-  private[this] val store: DataStore = new MongoStore(collection)(executor)
-  private[this] val imageDao: ImageDAO = new ImageDAO(store)(executor)
-  private[this] val disk: DiskService = new DiskService
+  override protected implicit def executor: ExecutionContext = ec
 
   /** Return the names of all the image files we've persisted so far.
     */
