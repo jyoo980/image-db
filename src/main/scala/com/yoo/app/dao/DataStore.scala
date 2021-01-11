@@ -1,5 +1,7 @@
 package com.yoo.app.dao
 
+import java.io.InputStream
+
 import com.yoo.app.model.Metadata
 import com.yoo.app.model.error.CollectionError
 
@@ -42,9 +44,13 @@ trait DataStore {
     */
   def deleteImagesByAuthor(author: String): Future[Either[CollectionError, Seq[String]]]
 
-  /** Persists image metadata to MongoDB after saving the image to disk.
-    * @param imageMetadata the metadata of the image we want to save to disk.
+  /** Persists image metadata and content to MongoDB.
+    * @param imageMetadata the metadata of the image we want to save.
+    * @param stream the content of the image we want to save to Mongo.
     * @return either a CollectionError or the filename of the image whose metadata we saved to disk.
     */
-  def saveImage(imageMetadata: Metadata): Future[Either[CollectionError, String]]
+  def saveImage(
+      imageMetadata: Metadata,
+      stream: InputStream
+  ): Future[Either[CollectionError, String]]
 }

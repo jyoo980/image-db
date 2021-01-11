@@ -69,14 +69,10 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
     val author = params.as[String]("author")
     val size = image.getSize
     val imageStream = image.getInputStream
-    disk.writeToDisk(id, imageStream) match {
+    ServiceResponse(imageDao.saveImage(id, author, size, s"./$id", imageStream).map {
       case Left(error) => InternalServerError(toError(error).asJson)
-      case Right(value) =>
-        ServiceResponse(imageDao.saveImage(id, author, size, value).map {
-          case Left(error) => InternalServerError(toError(error).asJson)
-          case Right(value) => Ok(toResponseMap(value).asJson)
-        })
-    }
+      case Right(value) => Ok(toResponseMap(value).asJson)
+    })
   }
 
   /** Delete an image from the service.
