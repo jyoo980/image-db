@@ -5,6 +5,7 @@ A very simple image repository service, written in Scala.
 ## Requirements ##
 
 * [Scala 2.13+](https://www.scala-lang.org/)
+* [JDK 11+](https://www.oracle.com/ca-en/java/technologies/javase-jdk11-downloads.html)
 * [sbt (Simple build tool)](https://www.scala-sbt.org/)
 * [MongoDB Community Edition](https://www.mongodb.com/)
 
