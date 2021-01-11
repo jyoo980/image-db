@@ -2,7 +2,7 @@ package com.yoo.app.dao
 
 import java.io.InputStream
 
-import com.yoo.app.model.{DocumentTransformer, Metadata}
+import com.yoo.app.model.{DocumentTransformer, Image, Metadata}
 import com.yoo.app.model.error._
 import org.bson.internal.Base64
 import org.mongodb.scala.{DuplicateKeyException, MongoCollection, MongoException}
@@ -36,6 +36,13 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
     collection.find(equal(fieldName = "_id", id)).toFuture().map { documents =>
       documents.headOption
         .map(d => Right(extractMetadata(d)))
+        .getOrElse(Left(LookupError(s"Image: $id does not exist")))
+    }
+
+  override def getImage(id: String): Future[Either[CollectionError, Image]] =
+    collection.find(equal(fieldName = "_id", id)).toFuture().map { documents =>
+      documents.headOption
+        .map(d => Right(extractImage(d)))
         .getOrElse(Left(LookupError(s"Image: $id does not exist")))
     }
 

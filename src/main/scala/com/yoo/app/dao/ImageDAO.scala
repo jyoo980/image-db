@@ -2,7 +2,7 @@ package com.yoo.app.dao
 
 import java.io.InputStream
 
-import com.yoo.app.model.{FileExtension, Metadata}
+import com.yoo.app.model.{FileExtension, Image, Metadata}
 import com.yoo.app.model.error.CollectionError
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -15,6 +15,9 @@ class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) {
 
   def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]] =
     dataStore.getImageMetadata(id)
+
+  def getImage(id: String): Future[Either[CollectionError, Image]] =
+    dataStore.getImage(id)
 
   def getImageMetadataByAuthor(author: String): Future[Either[CollectionError, Seq[Metadata]]] =
     dataStore.getImageMetadataByAuthor(author)

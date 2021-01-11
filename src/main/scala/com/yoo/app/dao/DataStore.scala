@@ -2,7 +2,7 @@ package com.yoo.app.dao
 
 import java.io.InputStream
 
-import com.yoo.app.model.Metadata
+import com.yoo.app.model.{Image, Metadata}
 import com.yoo.app.model.error.CollectionError
 
 import scala.concurrent.Future
@@ -25,6 +25,12 @@ trait DataStore {
     * @return either a CollectionError or the image's metadata.
     */
   def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]]
+
+  /** Return the image from the data store with the given filename.
+    * @param id the filename of the image we want to query the database for.
+    * @return either a CollectionError or the image from the database.
+    */
+  def getImage(id: String): Future[Either[CollectionError, Image]]
 
   /** Return the metadata of all images associated with the given author.
     * @param author the author whose images we are fetching the metadata for.
