@@ -41,7 +41,8 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
     * @return either a CollectionError or a sequence of metadata for the given author's images.
     */
   override def getImageMetadataByAuthor(
-      author: String): Future[Either[CollectionError, Seq[Metadata]]] =
+      author: String
+  ): Future[Either[CollectionError, Seq[Metadata]]] =
     for {
       imagesByAuthor <- getImagesByAuthor(author)
       eitherMetadata <- Future.sequence(imagesByAuthor.map(getImageMetadata))
