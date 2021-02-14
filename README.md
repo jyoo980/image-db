@@ -17,7 +17,7 @@ A very simple image repository service, written in Scala.
 `GET /fun`
 * Returns the splash page of this application (for fun)
 
-`GET /images/:author`
+`GET /images/author/:author`
 * Returns a list of all added images associated with the given author
 * Usage: `curl localhost:8080/images/:author`
 
@@ -81,7 +81,7 @@ $ curl localhost:8080/images/metadata/meme.jpg
 * Deletes the image with the given author and id from the server.
 * Usage: `curl -X DELETE localhost:8080/images/:author/:id`
 
-`DELETE /images/:author`
+`DELETE /images/author/:author`
 * Deletes the images associated with the given author from the server.
 * Usage: `curl -X DELETE localhost:8080/images/:author`
 
