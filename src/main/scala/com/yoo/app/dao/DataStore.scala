@@ -30,11 +30,12 @@ trait DataStore {
     */
   def getImageMetadataByAuthor(author: String): Future[Either[CollectionError, Seq[Metadata]]]
 
-  /**  Deletes the image with the given filename from the collection.
+  /**  Deletes the image with the given id and author from the collection.
     * @param id the filename of the image we want to delete.
+    * @param author the author to which the image we want to delete belongs.
     * @return either a CollectionError on failure, or the number of deleted documents.
     */
-  def deleteImage(id: String): Future[Either[CollectionError, Long]]
+  def deleteImage(id: String, author: String): Future[Either[CollectionError, Long]]
 
   /** Deletes the images associated with the given author from the collection.
     * @param author the author whose images we want to delete.

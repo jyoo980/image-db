@@ -4,7 +4,7 @@ import com.yoo.app.model.{DocumentTransformer, Metadata}
 import com.yoo.app.model.error._
 import org.mongodb.scala.{DuplicateKeyException, MongoCollection, MongoException}
 import org.mongodb.scala.bson.collection.immutable.Document
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Filters.{and, equal}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -52,16 +52,22 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
 
   /** Deletes the image with the given filename from the collection.
     * @param id the filename of the image we want to delete.
+    * @param author the author to which the image we want to delete belongs.
     * @return either a CollectionError on failure, or the number of deleted documents.
     */
-  override def deleteImage(id: String): Future[Either[CollectionError, Long]] =
-    collection.deleteOne(equal("_id", id)).toFuture().map { result =>
-      if (result.getDeletedCount > 0) {
-        Right(result.getDeletedCount)
-      } else {
-        Left(DeleteError(s"Image: $id does not exist."))
+  override def deleteImage(id: String, author: String): Future[Either[CollectionError, Long]] = {
+    val matchingOn = and(equal(fieldName = "_id", id), equal(fieldName = "author", author))
+    collection
+      .deleteOne(matchingOn)
+      .toFuture()
+      .map { result =>
+        if (result.getDeletedCount > 0) {
+          Right(result.getDeletedCount)
+        } else {
+          Left(DeleteError(s"Image: $id does not exist."))
+        }
       }
-    }
+  }
 
   /** Deletes the images associated with the given author from the collection.
     * @param author the author whose images we want to delete.
@@ -70,7 +76,7 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
   override def deleteImagesByAuthor(author: String): Future[Either[CollectionError, Seq[String]]] =
     for {
       imagesByAuthor <- getImagesByAuthor(author)
-      eitherDeleteOps <- Future.sequence(imagesByAuthor.map(deleteImage))
+      eitherDeleteOps <- Future.sequence(imagesByAuthor.map(deleteImage(_, author)))
     } yield
       if (eitherDeleteOps.forall(_.isRight)) Right(imagesByAuthor)
       else Left(DeleteError(s"Error while deleting images by author: $author"))

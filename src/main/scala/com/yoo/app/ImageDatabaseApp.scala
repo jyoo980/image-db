@@ -33,7 +33,7 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
 
   /** Return the names of all the images that are associated with the given author.
     */
-  get("/images/:author") {
+  get("/images/author/:author") {
     val author = params("author")
     val result = imageDao.getImagesByAuthor(author).map(toResponseMap)
     ServiceResponse(result.map(_.asJson).map(Ok(_)))
@@ -82,11 +82,12 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
   /** Delete an image from the service.
     */
   delete("/images/:author/:id") {
+    val author = params.as[String]("author")
     val toDelete = params.as[String]("id")
     disk.deleteFromDisk(toDelete) match {
       case Left(error) => InternalServerError(toError(error).asJson)
       case Right(_) =>
-        ServiceResponse(imageDao.deleteImage(toDelete).map {
+        ServiceResponse(imageDao.deleteImage(toDelete, author).map {
           case Left(error) => NotFound(toError(error).asJson)
           case Right(value) => Ok(toResponseMap(value).asJson)
         })
@@ -95,7 +96,7 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
 
   /** Bulk delete the images of the given author
     */
-  delete("/images/:author") {
+  delete("/images/author/:author") {
     val authorToDelete = params.as[String]("author")
     ServiceResponse(imageDao.deleteImagesByAuthor(authorToDelete).map {
       case Left(error) => InternalServerError(toError(error).asJson)
