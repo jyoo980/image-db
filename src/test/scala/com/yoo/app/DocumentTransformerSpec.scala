@@ -1,6 +1,6 @@
 package com.yoo.app
 
-import com.yoo.app.model.DocumentTransformer
+import com.yoo.app.model.{DocumentTransformer, FileExtension}
 import org.mongodb.scala.Document
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
@@ -8,12 +8,28 @@ class DocumentTransformerSpec extends DefaultSpec with DocumentTransformerFixtur
 
   "extractId" should "evaluate to None given a document with no _id key" in {
     val doc = Document("id" -> "test")
-    extractId(doc).isEmpty shouldBe true
+    extractId(doc) shouldBe None
   }
 
   it should "evaluate to a Some given a document with a _id key" in {
     val doc = Document("_id" -> "meme.jpeg")
     extractId(doc).map(_ shouldBe "meme.jpeg")
+  }
+
+  "extractExtension" should "evaluate to None given a document with no _id key" in {
+    val doc = Document("notId" -> "shouldNotReturn")
+    extractExtension(doc) shouldBe None
+  }
+
+  it should "evaluate to the correct file extension given valid extensions as string" in {
+    val supportedExtensions = FileExtension.supported.map { case (ext, extType) =>
+      (s"text.$ext", extType)
+    }
+
+    supportedExtensions.foreach { case (fileName, expectedExt) =>
+      val doc = Document("_id" -> fileName)
+      extractExtension(doc).map(_ shouldBe expectedExt)
+    }
   }
 
   "extractMetadata" should "extract the correct fields from a well-formed Document" in {
