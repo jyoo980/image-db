@@ -1,4 +1,4 @@
-# image-db #
+# image-db ![Scala CI](https://github.com/jyoo980/image-db/workflows/Scala%20CI/badge.svg?branch=master) #
 
 A very simple image repository service, written in Scala.
 
