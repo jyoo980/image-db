@@ -41,6 +41,10 @@ class DiskService {
     }
   }
 
+  /** Given a list of ids of images, remove them from disk.
+    * @param ids the filenames of the images we want to delete.
+    * @return either a DiskError or the filenames of the images that have been successfully deleted.
+    */
   def bulkDeleteFromDisk(ids: Seq[String]): Either[DiskError, String] = {
     val paths = ids.map(id => s"./$id")
     try {
