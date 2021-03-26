@@ -20,9 +20,9 @@ object FileExtension {
 
   val supported = Map("png" -> PNG(), "jpeg" -> JPEG(), "jpg" -> JPEG(), "gif" -> GIF())
 
-  def apply(fileName: String): Option[FileExtension] = {
-    val lastDot = fileName.lastIndexOf(".")
-    val ext = fileName.substring(lastDot + 1, fileName.length)
-    supported.get(ext)
-  }
+  def apply(fileName: String): Option[FileExtension] =
+    fileName.split("\\.").toList match {
+      case _ :: extension :: Nil => supported.get(extension)
+      case _ => None
+    }
 }
