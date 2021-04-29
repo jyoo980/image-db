@@ -33,4 +33,17 @@ trait DocumentTransformer {
       location = document.get("location").map(_.asString.getValue).fold("n/a")(loc => loc)
     )
   }
+
+  /** Given a document, transform it to its Image instance.
+    * @param document the document for which we want to extract an Image from.
+    * @return the extracted Image of the given document.
+    */
+  def extractImage(document: Document): Image = {
+    val metadata = extractMetadata(document)
+    Image(
+      metadata.name,
+      content = document.get("base64").map(_.asString.getValue).fold("n/a")(content => content),
+      meta = metadata
+    )
+  }
 }

@@ -3,7 +3,7 @@ package com.yoo.app
 import java.awt.Desktop
 import java.net.URI
 
-import com.yoo.app.config.ImageDatabaseConfig
+import com.yoo.app.config.{FeatureConfig, ImageDatabaseConfig}
 import com.yoo.app.dao.ImageDAO
 import com.yoo.app.model.ResponseEncoder
 import com.yoo.app.service.DiskService
@@ -61,6 +61,19 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
     })
   }
 
+  get("/images/:id") {
+    if (FeatureConfig.SAVE_IMAGE_TO_DB) {
+      val id = params("id")
+      ServiceResponse(imageDao.getImage(id).map {
+        case Left(error) => InternalServerError(toError(error).asJson)
+        case Right(value) => Ok(toResponseMap(value).asJson)
+      })
+    } else {
+      InternalServerError(
+        Map("error" -> "This endpoint is currently disabled. Check FeatureConfig.scala").asJson)
+    }
+  }
+
   /** Upload an image to the service.
     */
   post("/images/:author/:id") {
@@ -69,14 +82,10 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
     val author = params.as[String]("author")
     val size = image.getSize
     val imageStream = image.getInputStream
-    disk.writeToDisk(id, imageStream) match {
+    ServiceResponse(imageDao.saveImage(id, author, size, s"./$id", imageStream).map {
       case Left(error) => InternalServerError(toError(error).asJson)
-      case Right(value) =>
-        ServiceResponse(imageDao.saveImage(id, author, size, value).map {
-          case Left(error) => InternalServerError(toError(error).asJson)
-          case Right(value) => Ok(toResponseMap(value).asJson)
-        })
-    }
+      case Right(value) => Ok(toResponseMap(value).asJson)
+    })
   }
 
   /** Delete an image from the service.

@@ -1,6 +1,8 @@
 package com.yoo.app.dao
 
-import com.yoo.app.model.{FileExtension, Metadata}
+import java.io.InputStream
+
+import com.yoo.app.model.{FileExtension, Image, Metadata}
 import com.yoo.app.model.error.CollectionError
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -13,6 +15,9 @@ class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) {
 
   def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]] =
     dataStore.getImageMetadata(id)
+
+  def getImage(id: String): Future[Either[CollectionError, Image]] =
+    dataStore.getImage(id)
 
   def getImageMetadataByAuthor(author: String): Future[Either[CollectionError, Seq[Metadata]]] =
     dataStore.getImageMetadataByAuthor(author)
@@ -27,11 +32,12 @@ class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) {
       id: String,
       author: String,
       size: Long,
-      location: String
+      location: String,
+      content: InputStream
   ): Future[Either[CollectionError, String]] = {
-    val fileExt = FileExtension(id).fold("n/a")(ext => ext.toString)
+    val fileExt = FileExtension(id).fold("n/a")(_.toString)
     val metadata = Metadata(id, author, size, fileExt, location)
-    dataStore.saveImage(metadata)
+    dataStore.saveImage(metadata, content)
   }
 
 }

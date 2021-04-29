@@ -1,6 +1,8 @@
 package com.yoo.app.dao
 
-import com.yoo.app.model.Metadata
+import java.io.InputStream
+
+import com.yoo.app.model.{Image, Metadata}
 import com.yoo.app.model.error.CollectionError
 
 import scala.concurrent.Future
@@ -24,6 +26,12 @@ trait DataStore {
     */
   def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]]
 
+  /** Return the image from the data store with the given filename.
+    * @param id the filename of the image we want to query the database for.
+    * @return either a CollectionError or the image from the database.
+    */
+  def getImage(id: String): Future[Either[CollectionError, Image]]
+
   /** Return the metadata of all images associated with the given author.
     * @param author the author whose images we are fetching the metadata for.
     * @return either a CollectionError or a sequence of metadata for the given author's images.
@@ -43,9 +51,13 @@ trait DataStore {
     */
   def deleteImagesByAuthor(author: String): Future[Either[CollectionError, Seq[String]]]
 
-  /** Persists image metadata to MongoDB after saving the image to disk.
-    * @param imageMetadata the metadata of the image we want to save to disk.
+  /** Persists image metadata and content to MongoDB.
+    * @param imageMetadata the metadata of the image we want to save.
+    * @param stream the content of the image we want to save to Mongo.
     * @return either a CollectionError or the filename of the image whose metadata we saved to disk.
     */
-  def saveImage(imageMetadata: Metadata): Future[Either[CollectionError, String]]
+  def saveImage(
+      imageMetadata: Metadata,
+      stream: InputStream
+  ): Future[Either[CollectionError, String]]
 }
