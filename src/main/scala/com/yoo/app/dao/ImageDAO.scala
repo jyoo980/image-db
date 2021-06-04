@@ -11,7 +11,7 @@ class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) {
 
   def getImagesByAuthor(author: String): Future[Seq[String]] = dataStore.getImagesByAuthor(author)
 
-  def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]] =
+  def getImageMetadata(id: String): Future[Either[CollectionError, Seq[Metadata]]] =
     dataStore.getImageMetadata(id)
 
   def getImageMetadataByAuthor(author: String): Future[Either[CollectionError, Seq[Metadata]]] =

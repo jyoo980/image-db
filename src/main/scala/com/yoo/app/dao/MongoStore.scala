@@ -5,6 +5,7 @@ import com.yoo.app.model.error._
 import org.mongodb.scala.{DuplicateKeyException, MongoCollection, MongoException}
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters.{and, equal}
+import cats.implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -29,11 +30,13 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
     * @param id the filename of the image we want to obtain the metadata for.
     * @return either a CollectionError or the image's metadata.
     */
-  override def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]] =
+  override def getImageMetadata(
+      id: String
+  ): Future[Either[CollectionError, Seq[Metadata]]] =
     collection.find(equal(fieldName = "_id", id)).toFuture().map { documents =>
       documents.headOption
-        .map(d => Right(extractMetadata(d)))
-        .getOrElse(Left(LookupError(s"Image: $id does not exist")))
+        .map(doc => Seq(extractMetadata(doc)))
+        .toRight(LookupError("sImage: $id does not exist"))
     }
 
   /** Return the metadata of all images associated with the given author.
@@ -43,12 +46,7 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
   override def getImageMetadataByAuthor(
       author: String
   ): Future[Either[CollectionError, Seq[Metadata]]] =
-    for {
-      imagesByAuthor <- getImagesByAuthor(author)
-      eitherMetadata <- Future.sequence(imagesByAuthor.map(getImageMetadata))
-    } yield
-      if (eitherMetadata.forall(_.isRight)) Right(eitherMetadata.flatMap(_.toSeq))
-      else Left(LookupError(s"Error while looking up image metadata for author: $author"))
+    getImagesByAuthor(author).flatMap(_.traverse(getImageMetadata).map(_.combineAll))
 
   /** Deletes the image with the given filename from the collection.
     * @param id the filename of the image we want to delete.

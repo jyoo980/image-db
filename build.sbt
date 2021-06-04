@@ -19,6 +19,7 @@ lazy val hello = (project in file("."))
       "org.mongodb" % "bson" % "3.12.0",
       "org.mongodb" % "mongodb-driver-core" % "3.12.0",
       "org.mongodb" % "mongodb-driver-async" % "3.12.0",
+      "org.typelevel" %% "cats-core" % "2.3.0",
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion,

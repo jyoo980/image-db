@@ -22,7 +22,7 @@ trait DataStore {
     * @param id the filename of the image we want to obtain the metadata for.
     * @return either a CollectionError or the image's metadata.
     */
-  def getImageMetadata(id: String): Future[Either[CollectionError, Metadata]]
+  def getImageMetadata(id: String): Future[Either[CollectionError, Seq[Metadata]]]
 
   /** Return the metadata of all images associated with the given author.
     * @param author the author whose images we are fetching the metadata for.
