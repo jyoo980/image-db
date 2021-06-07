@@ -1,5 +1,6 @@
 package com.yoo.app.dao
 
+import cats.data.EitherT
 import com.yoo.app.model.{FileExtension, Metadata}
 import com.yoo.app.model.error.CollectionError
 
@@ -11,16 +12,16 @@ class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) {
 
   def getImagesByAuthor(author: String): Future[Seq[String]] = dataStore.getImagesByAuthor(author)
 
-  def getImageMetadata(id: String): Future[Either[CollectionError, Seq[Metadata]]] =
+  def getImageMetadata(id: String): EitherT[Future, CollectionError, Seq[Metadata]] =
     dataStore.getImageMetadata(id)
 
-  def getImageMetadataByAuthor(author: String): Future[Either[CollectionError, Seq[Metadata]]] =
+  def getImageMetadataByAuthor(author: String): EitherT[Future, CollectionError, Seq[Metadata]] =
     dataStore.getImageMetadataByAuthor(author)
 
-  def deleteImage(id: String, author: String): Future[Either[CollectionError, Long]] =
+  def deleteImage(id: String, author: String): EitherT[Future, CollectionError, Long] =
     dataStore.deleteImage(id, author)
 
-  def deleteImagesByAuthor(author: String): Future[Either[CollectionError, Seq[String]]] =
+  def deleteImagesByAuthor(author: String): EitherT[Future, CollectionError, Seq[String]] =
     dataStore.deleteImagesByAuthor(author)
 
   def saveImage(
@@ -28,7 +29,7 @@ class ImageDAO(dataStore: DataStore)(implicit ec: ExecutionContext) {
       author: String,
       size: Long,
       location: String
-  ): Future[Either[CollectionError, String]] = {
+  ): EitherT[Future, CollectionError, String] = {
     val fileExt = FileExtension(id).fold("n/a")(ext => ext.toString)
     val metadata = Metadata(id, author, size, fileExt, location)
     dataStore.saveImage(metadata)

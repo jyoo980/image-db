@@ -2,7 +2,6 @@ package com.yoo.app
 
 import java.awt.Desktop
 import java.net.URI
-
 import com.yoo.app.config.ImageDatabaseConfig
 import com.yoo.app.dao.ImageDAO
 import com.yoo.app.model.ResponseEncoder
@@ -12,6 +11,7 @@ import io.circe.syntax._
 import org.scalatra._
 import org.scalatra.servlet.{FileUploadSupport, MultipartConfig}
 
+import java.io.Serializable
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: ExecutionContextExecutor)
@@ -43,22 +43,24 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
     */
   get("/images/metadata/author/:author") {
     val author = params("author")
-    ServiceResponse(imageDao.getImageMetadataByAuthor(author).map {
-      case Left(error) =>
-        InternalServerError(toError(error).asJson)
-      case Right(value) =>
-        Ok(toResponseMap(value).asJson)
-    })
+    val res = imageDao
+      .getImageMetadataByAuthor(author)
+      .leftMap(err => InternalServerError(toError(err).asJson))
+      .map(value => Ok(toResponseMap(value).asJson))
+      .value
+    ServiceResponse(res)
   }
 
   /** Return the metadata of an image, given its id.
     */
   get("/images/metadata/:id") {
     val fileName = params("id")
-    ServiceResponse(imageDao.getImageMetadata(fileName).map {
-      case Left(error) => InternalServerError(toError(error).asJson)
-      case Right(value) => Ok(toResponseMap(value).asJson)
-    })
+    val res = imageDao
+      .getImageMetadata(fileName)
+      .leftMap(err => InternalServerError(toError(err).asJson))
+      .map(value => Ok(toResponseMap(value).asJson))
+      .value
+    ServiceResponse(res)
   }
 
   /** Upload an image to the service.
@@ -72,10 +74,13 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
     disk.writeToDisk(id, imageStream) match {
       case Left(error) => InternalServerError(toError(error).asJson)
       case Right(value) =>
-        ServiceResponse(imageDao.saveImage(id, author, size, value).map {
-          case Left(error) => InternalServerError(toError(error).asJson)
-          case Right(value) => Ok(toResponseMap(value).asJson)
-        })
+        ServiceResponse(
+          imageDao
+            .saveImage(id, author, size, value)
+            .leftMap(err => InternalServerError(toError(err).asJson))
+            .map(value => Ok(toResponseMap(value).asJson))
+            .value
+        )
     }
   }
 
@@ -87,10 +92,13 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
     disk.deleteFromDisk(toDelete) match {
       case Left(error) => InternalServerError(toError(error).asJson)
       case Right(_) =>
-        ServiceResponse(imageDao.deleteImage(toDelete, author).map {
-          case Left(error) => NotFound(toError(error).asJson)
-          case Right(value) => Ok(toResponseMap(value).asJson)
-        })
+        ServiceResponse(
+          imageDao
+            .deleteImage(toDelete, author)
+            .leftMap(err => InternalServerError(toError(err).asJson))
+            .map(value => Ok(toResponseMap(value).asJson))
+            .value
+        )
     }
   }
 
@@ -98,14 +106,18 @@ class ImageDatabaseApp(imageDao: ImageDAO, disk: DiskService)(implicit ec: Execu
     */
   delete("/images/author/:author") {
     val authorToDelete = params.as[String]("author")
-    ServiceResponse(imageDao.deleteImagesByAuthor(authorToDelete).map {
-      case Left(error) => InternalServerError(toError(error).asJson)
-      case Right(value) =>
-        disk.bulkDeleteFromDisk(value) match {
-          case Left(error) => InternalServerError(toError(error).asJson)
-          case Right(result) => Ok(toResponseMap(result).asJson)
+    ServiceResponse(
+      imageDao
+        .deleteImagesByAuthor(authorToDelete)
+        .leftMap(err => InternalServerError(toError(err).asJson))
+        .map { value =>
+          disk.bulkDeleteFromDisk(value) match {
+            case Left(error) => InternalServerError(toError(error).asJson)
+            case Right(result) => Ok(toResponseMap(result).asJson)
+          }
         }
-    })
+        .value
+    )
   }
 
   /** Navigate to a very fun url

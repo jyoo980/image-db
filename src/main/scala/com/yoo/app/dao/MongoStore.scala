@@ -1,5 +1,7 @@
 package com.yoo.app.dao
 
+import cats.Applicative
+import cats.data.EitherT
 import com.yoo.app.model.{DocumentTransformer, Metadata}
 import com.yoo.app.model.error._
 import org.mongodb.scala.{DuplicateKeyException, MongoCollection, MongoException}
@@ -17,14 +19,17 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
     * @return a sequence of strings which are image filenames.
     */
   override def getImageNames: Future[Seq[String]] =
-    collection.find().toFuture().map(_.flatMap(extractId))
+    extractIds(collection.find().toFuture())
 
   /** Gets the names of all images that are associated with an author.
     * @param author the author whose images we run a search for.
     * @return the images that belong to the author.
     */
   override def getImagesByAuthor(author: String): Future[Seq[String]] =
-    collection.find(equal(fieldName = "author", author)).toFuture().map(_.flatMap(extractId))
+    extractIds(collection.find(equal(fieldName = "author", author)).toFuture())
+
+  private def extractIds[F[_]: Applicative](fd: F[Seq[Document]]): F[Seq[String]] =
+    fd.map(_.flatMap(extractId))
 
   /** Return the metadata of the image with the given filename.
     * @param id the filename of the image we want to obtain the metadata for.
@@ -32,12 +37,12 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
     */
   override def getImageMetadata(
       id: String
-  ): Future[Either[CollectionError, Seq[Metadata]]] =
-    collection.find(equal(fieldName = "_id", id)).toFuture().map { documents =>
+  ): EitherT[Future, CollectionError, Seq[Metadata]] =
+    EitherT(collection.find(equal(fieldName = "_id", id)).toFuture().map { documents =>
       documents.headOption
         .map(doc => Seq(extractMetadata(doc)))
         .toRight(LookupError("sImage: $id does not exist"))
-    }
+    })
 
   /** Return the metadata of all images associated with the given author.
     * @param author the author whose images we are fetching the metadata for.
@@ -45,61 +50,62 @@ class MongoStore(collection: MongoCollection[Document])(implicit ec: ExecutionCo
     */
   override def getImageMetadataByAuthor(
       author: String
-  ): Future[Either[CollectionError, Seq[Metadata]]] =
-    getImagesByAuthor(author).flatMap(_.traverse(getImageMetadata).map(_.combineAll))
+  ): EitherT[Future, CollectionError, Seq[Metadata]] =
+    EitherT.right(getImagesByAuthor(author)).flatMap(_.traverse(getImageMetadata).map(_.combineAll))
 
   /** Deletes the image with the given filename from the collection.
     * @param id the filename of the image we want to delete.
     * @param author the author to which the image we want to delete belongs.
     * @return either a CollectionError on failure, or the number of deleted documents.
     */
-  override def deleteImage(id: String, author: String): Future[Either[CollectionError, Long]] = {
+  override def deleteImage(id: String, author: String): EitherT[Future, CollectionError, Long] = {
     val matchingOn = and(equal(fieldName = "_id", id), equal(fieldName = "author", author))
-    collection
-      .deleteOne(matchingOn)
-      .toFuture()
-      .map { result =>
-        if (result.getDeletedCount > 0) {
-          Right(result.getDeletedCount)
-        } else {
-          Left(DeleteError(s"Image: $id does not exist."))
+    EitherT(
+      collection
+        .deleteOne(matchingOn)
+        .toFuture()
+        .map { result =>
+          if (result.getDeletedCount > 0) {
+            Right(result.getDeletedCount)
+          } else {
+            Left(DeleteError(s"Image: $id does not exist."))
+          }
         }
-      }
+    )
   }
 
   /** Deletes the images associated with the given author from the collection.
     * @param author the author whose images we want to delete.
     * @return either a CollectionError on failure, or a sequence of images that have been deleted.
     */
-  override def deleteImagesByAuthor(author: String): Future[Either[CollectionError, Seq[String]]] =
-    for {
-      imagesByAuthor <- getImagesByAuthor(author)
-      eitherDeleteOps <- Future.sequence(imagesByAuthor.map(deleteImage(_, author)))
-    } yield
-      if (eitherDeleteOps.forall(_.isRight)) Right(imagesByAuthor)
-      else Left(DeleteError(s"Error while deleting images by author: $author"))
+  override def deleteImagesByAuthor(author: String): EitherT[Future, CollectionError, Seq[String]] =
+    EitherT.right(getImagesByAuthor(author)).flatMap { imagesByAuthor =>
+      imagesByAuthor.traverse(deleteImage(_, author)).map(_ => imagesByAuthor)
+    }
 
   /** Persists image metadata to MongoDB after saving the image to disk.
     * @param imageMetadata the metadata of the image we want to save to disk.
     * @return either a CollectionError or the filename of the image whose metadata we saved to disk.
     */
-  override def saveImage(imageMetadata: Metadata): Future[Either[CollectionError, String]] = {
+  override def saveImage(imageMetadata: Metadata): EitherT[Future, CollectionError, String] = {
     val id = imageMetadata.name
     val docToSave = Document(
       "_id" -> id,
       "author" -> imageMetadata.author,
       "size" -> imageMetadata.size,
       "location" -> imageMetadata.location)
-    collection
-      .insertOne(docToSave)
-      .toFuture()
-      .map(_ => Right(id))
-      .recover {
-        case _: DuplicateKeyException =>
-          Left(DuplicateWriteError(s"Image: $id already exists."))
-        case e: MongoException =>
-          Left(MongoWriteError(s"Error while writing: $id, error: ${e.getMessage}"))
-      }
+    EitherT(
+      collection
+        .insertOne(docToSave)
+        .toFuture()
+        .map(_ => Right(id))
+        .recover {
+          case _: DuplicateKeyException =>
+            Left(DuplicateWriteError(s"Image: $id already exists."))
+          case e: MongoException =>
+            Left(MongoWriteError(s"Error while writing: $id, error: ${e.getMessage}"))
+        }
+    )
   }
 
 }
